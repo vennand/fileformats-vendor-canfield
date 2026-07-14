@@ -3,14 +3,14 @@ requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
-name = "fileformats-vendor-CHANGEME"
+name = "fileformats-vendor-canfield"
 description = "Classes for representing different file formats in Python classes for use in type hinting in data workflows"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = ["fileformats >= 0.17"]
 license = { file = "LICENSE" }
-authors = [{ name = "<YOUR-NAME>", email = "<YOUR-EMAIL>" }]
-maintainers = [{ name = "<YOUR-NAME>", email = "<YOUR-EMAIL>" }]
+authors = [{ name = "André Venne", email = "vennand@gmail.com" }]
+maintainers = [{ name = "André Venne", email = "vennand@gmail.com" }]
 keywords = ["file formats", "data"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -39,20 +39,20 @@ test = [
 ]
 
 [project.urls]
-repository = "https://github.com/ArcanaFramework/fileformats-vendor-CHANGEME"
+repository = "https://github.com/ArcanaFramework/fileformats-vendor-canfield"
 
 [tool.hatch.version]
 source = "vcs"
 
 [tool.hatch.build.hooks.vcs]
-version-file = "fileformats/vendor/CHANGEME/_version.py"
+version-file = "fileformats/vendor/canfield/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["fileformats"]
 
 [tool.black]
 target-version = ['py310']
-exclude = "fileformats/vendor/CHANGEME/_version.py"
+exclude = "fileformats/vendor/canfield/_version.py"
 
 [tool.codespell]
 ignore-words = ".codespell-ignorewords"
