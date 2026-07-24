@@ -1,11 +1,26 @@
 from fileformats.core import mtime_cached_property, validated_property
 from fileformats.core.exceptions import FormatMismatchError
-from fileformats.generic import Directory, UnicodeFile
+from fileformats.generic import Directory, UnicodeFile, BinaryFile
 from fileformats.application import Json, Xml
-from fileformats.image import Jpeg, Svg, Png
+from fileformats.image import Jpeg, Svg___Xml, Png
+from fileformats.medimage import MedicalImagingData
 
 
-class DexiDir(Directory):
+class T2k(BinaryFile, MedicalImagingData):
+    """Canfield Vectra image data
+
+    Canfield encrypted proprietary image file format, presumably generated
+    by the hand-held Vectra H1 camera. The file contains a set of images and metadata
+    for a single capture, including the original images, the processed images,
+    and the results of lesion analysis. The file is encrypted and can only be read
+    by Canfield's proprietary software. The file is typically named with a
+    timestamp and a .t2k extension, e.g. '20240730103101.t2k'.
+    """
+
+    ext = ".t2k"
+
+
+class DexiDataDir(Directory, MedicalImagingData):
     """Canfield Dexi image data directory
 
     Canfield encrypted proprietary image file format.
@@ -35,55 +50,55 @@ class DexiDir(Directory):
         )  # FIXME: I don't have the exact path for this
 
     @validated_property
-    def lesion_file(self) -> Svg:
+    def lesion_file(self) -> Svg___Xml:
         """The lesion file in the directory."""
-        return Svg(
+        return Svg___Xml(
             self.fspath / self.result_dict["OutputFiles"]["Lesion"]
         )  # FIXME: I don't have the exact path for this
 
 
-class DanaosDir(Directory):
+class DanaosDir(Directory, MedicalImagingData):
     """Canfield Danaos image data directory
 
     Canfield encrypted proprietary image file format.
     """
 
     @validated_property
-    def asymmetry_files(self) -> list[Png]:
-        """The asymmetry files in the directory."""
-        return [Png(self.fspath / f) for f in self.fspath.glob("Asy*.png")]
-
-    @validated_property
-    def colour_files(self) -> list[Png]:
-        """The colour files in the directory."""
-        return [Png(self.fspath / f) for f in self.fspath.glob("Col*.png")]
-
-    @validated_property
-    def contour_file(self) -> list[Png]:
-        """The colour files in the directory."""
-        return Png(self.fspath / "Cont.png")
-
-    @validated_property
     def data_file(self) -> Xml:
         """The data file in the directory."""
         return Xml(self.fspath / "Data.xml")
 
-    @validated_property
+    @property
+    def asymmetry_files(self) -> list[Png]:
+        """The asymmetry files in the directory."""
+        return [Png(self.fspath / f) for f in self.fspath.glob("Asy*.png")]
+
+    @property
+    def colour_files(self) -> list[Png]:
+        """The colour files in the directory."""
+        return [Png(self.fspath / f) for f in self.fspath.glob("Col*.png")]
+
+    @property
+    def contour_file(self) -> list[Png]:
+        """The colour files in the directory."""
+        return Png(self.fspath / "Cont.png")
+
+    @property
     def hair_file(self) -> Png:
         """The hair file in the directory."""
         return Png(self.fspath / "Hair.png")
 
 
-class Vectra(Directory):
-    """Canfield Vectra image data directory
+class LesionAnalysisDir(Directory, MedicalImagingData):
+    """Canfield Vectra lesion capture and analysis
 
     Canfield encrypted proprietary image file format.
     """
 
     @validated_property
-    def catpureinfo_file(self) -> UnicodeFile:
+    def captureinfo_file(self) -> UnicodeFile:
         """The capture info file in the directory."""
-        return UnicodeFile(self.fspath / "catpureinfo_scope")
+        return UnicodeFile(self.fspath / "captureinfo_scope")
 
     @validated_property
     def danaos_dir(self) -> DanaosDir:
@@ -91,10 +106,10 @@ class Vectra(Directory):
         return DanaosDir(self.fspath / "DANAOS")
 
     @validated_property
-    def dexi_dirs(self) -> dict[str, DexiDir]:
+    def dexi_dirs(self) -> dict[str, DexiDataDir]:
         """Dictionary of dexi directories sorted by their version."""
         dct = {
-            p.name.split("_")[1]: DexiDir(p)
+            p.name.split("_")[1]: DexiDataDir(p)
             for p in self.fspath.glob("DexiData_*")
             if p.is_dir()
         }
