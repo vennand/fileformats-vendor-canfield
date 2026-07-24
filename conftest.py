@@ -41,16 +41,17 @@ if os.getenv("_PYTEST_RAISE", "0") != "0":
         raise excinfo.value
 
 
-@pytest.fixture
-def cleansed_export_dirs() -> list[Path]:
-    """Return the paths to the export data dirs to test against"""
+def _cleansed_export_dirs() -> list[Path]:
     if not EXPORT_DIR_TEST_DATA_PATH:
-        raise RuntimeError(
-            "'FILEFORMATS_VENDOR_CANFIELD_EXPORT_TEST_DATA' environment variable is not set, cannot run tests."
-            "Please set it to a parent directory containing the cleansed export data directories to test against."
-        )
-    return list(
+        return []
+    return [
         p
         for p in Path(EXPORT_DIR_TEST_DATA_PATH).iterdir()
         if not p.name.startswith(".") and p.is_dir()
-    )
+    ]
+
+
+@pytest.fixture(params=_cleansed_export_dirs(), ids=lambda p: p.name)
+def cleansed_export_dir(request: pytest.FixtureRequest) -> Path:
+    """Each cleansed export directory to test against, in turn"""
+    return request.param  # type: ignore[no-any-return]
