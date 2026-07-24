@@ -1,0 +1,122 @@
+import typing as ty
+
+from fileformats.core import mtime_cached_property, validated_property
+from fileformats.core.exceptions import FormatMismatchError
+from fileformats.generic import Directory, UnicodeFile, BinaryFile
+from fileformats.application import Json, Xml
+from fileformats.image import Jpeg, Svg___Xml, Png
+from fileformats.medimage import MedicalImagingData
+
+
+class T2k(BinaryFile, MedicalImagingData):
+    """Canfield Vectra image data
+
+    Canfield encrypted proprietary image file format, presumably generated
+    by the hand-held Vectra H1 camera. The file contains a set of images and metadata
+    for a single capture, including the original images, the processed images,
+    and the results of lesion analysis. The file is encrypted and can only be read
+    by Canfield's proprietary software. The file is typically named with a
+    timestamp and a .t2k extension, e.g. '20240730103101.t2k'.
+    """
+
+    ext = ".t2k"
+
+
+class DexiDataDir(Directory, MedicalImagingData):
+    """Canfield Dexi image data directory
+
+    Canfield encrypted proprietary image file format.
+    """
+
+    @mtime_cached_property
+    def result_dict(self) -> dict[ty.Any, ty.Any]:
+        """The results file in the directory."""
+        return self.result_file.load()  # type: ignore[no-any-return]
+
+    @validated_property  # validated_property is checked at initialization time, so if this file is missing the format will not match
+    def result_file(self) -> Json:
+        """The results file in the directory."""
+        return Json(self.fspath / "result.json")
+
+    # Alternatively to the implementation below, we could just find and return
+    # the files from their extensions in the directory. If there is a case
+    # where there might be different output files we could just collapse
+    # these properties into
+    # a single validated property called 'output_files' or something
+
+    @validated_property
+    def heatmap_file(self) -> Jpeg:
+        """The heatmap file in the directory."""
+        return Jpeg(
+            self.fspath / self.result_dict["OutputFiles"]["HeatMap"]
+        )  # FIXME: I don't have the exact path for this
+
+    @validated_property
+    def lesion_file(self) -> Svg___Xml:
+        """The lesion file in the directory."""
+        return Svg___Xml(
+            self.fspath / self.result_dict["OutputFiles"]["Lesion"]
+        )  # FIXME: I don't have the exact path for this
+
+
+class DanaosDir(Directory, MedicalImagingData):
+    """Canfield Danaos image data directory
+
+    Canfield encrypted proprietary image file format.
+    """
+
+    @validated_property
+    def data_file(self) -> Xml:
+        """The data file in the directory."""
+        return Xml(self.fspath / "Data.xml")
+
+    @property
+    def asymmetry_files(self) -> list[Png]:
+        """The asymmetry files in the directory."""
+        return [Png(self.fspath / f) for f in self.fspath.glob("Asy*.png")]
+
+    @property
+    def colour_files(self) -> list[Png]:
+        """The colour files in the directory."""
+        return [Png(self.fspath / f) for f in self.fspath.glob("Col*.png")]
+
+    @property
+    def contour_file(self) -> Png:
+        """The contour file in the directory."""
+        return Png(self.fspath / "Cont.png")
+
+    @property
+    def hair_file(self) -> Png:
+        """The hair file in the directory."""
+        return Png(self.fspath / "Hair.png")
+
+
+class LesionAnalysisDir(Directory, MedicalImagingData):
+    """Canfield Vectra lesion capture and analysis
+
+    Canfield encrypted proprietary image file format.
+    """
+
+    @validated_property
+    def captureinfo_file(self) -> UnicodeFile:
+        """The capture info file in the directory."""
+        return UnicodeFile(self.fspath / "captureinfo_scope")
+
+    @validated_property
+    def danaos_dir(self) -> DanaosDir:
+        """The danaos directory in the directory."""
+        return DanaosDir(self.fspath / "DANAOS")
+
+    @validated_property
+    def dexi_dirs(self) -> dict[str, DexiDataDir]:
+        """Dictionary of dexi directories sorted by their version."""
+        dct = {
+            p.name.split("_")[1]: DexiDataDir(p)
+            for p in self.fspath.glob("DexiData_*")
+            if p.is_dir()
+        }
+        if not dct:
+            raise FormatMismatchError(
+                f"Did not find any DexiData sub-directories within the Vectra directory path {self.fspath}"
+            )
+        return dct

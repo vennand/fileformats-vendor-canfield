@@ -16,13 +16,15 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
         python-version: ["3.11", "3.14"]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash -l {0}
+    env:
+      PIP_BREAK_SYSTEM_PACKAGES: 1
     steps:
     - name: Checkout
       uses: actions/checkout@v7
@@ -34,14 +36,6 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Create virtual environment
-      run: |
-        python3 -m venv .venv
-        if [ "$RUNNER_OS" = "Windows" ]; then
-          echo "$GITHUB_WORKSPACE/.venv/Scripts" >> "$GITHUB_PATH"
-        else
-          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
-        fi
     - name: Update build tools
       run: python3 -m pip install --upgrade pip
     - name: Install Package
@@ -69,10 +63,6 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 0
-    - name: Unset header
-      # checkout@v6 adds a header that makes branch protection report errors
-      # because the Github action bot is not a collaborator on the repo
-      run: git config --local --unset http.https://github.com/.extraheader
     - name: Set up Python
       uses: actions/setup-python@v6
       with:

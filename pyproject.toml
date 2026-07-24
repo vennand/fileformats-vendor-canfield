@@ -7,7 +7,7 @@ name = "fileformats-vendor-canfield"
 description = "Classes for representing different file formats in Python classes for use in type hinting in data workflows"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["fileformats >= 0.17"]
+dependencies = ["fileformats >= 0.17", "fileformats-medimage >=0.11"]
 license = { file = "LICENSE" }
 authors = [{ name = "André Venne", email = "vennand@gmail.com" }]
 maintainers = [{ name = "André Venne", email = "vennand@gmail.com" }]
@@ -20,10 +20,10 @@ classifiers = [
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
 ]
 dynamic = ["version"]
@@ -65,7 +65,7 @@ select = "C,E,F,W,B,B950"
 extend-ignore = ['E203', 'E501', 'E129']
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 ignore_missing_imports = true
 strict = true
 namespace_packages = true

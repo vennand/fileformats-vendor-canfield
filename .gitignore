@@ -24,3 +24,4 @@ __pycache__
 /fileformats/vendor/canfield/_version.py
 /extras/fileformats/extras/vendor/canfield/_version.py
 .mypy_cache
+.idea
