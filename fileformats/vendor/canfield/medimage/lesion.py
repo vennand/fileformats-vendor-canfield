@@ -1,3 +1,5 @@
+import typing as ty
+
 from fileformats.core import mtime_cached_property, validated_property
 from fileformats.core.exceptions import FormatMismatchError
 from fileformats.generic import Directory, UnicodeFile, BinaryFile
@@ -27,9 +29,9 @@ class DexiDataDir(Directory, MedicalImagingData):
     """
 
     @mtime_cached_property
-    def result_dict(self) -> dict:
+    def result_dict(self) -> dict[ty.Any, ty.Any]:
         """The results file in the directory."""
-        return self.result_file.load()
+        return self.result_file.load()  # type: ignore[no-any-return]
 
     @validated_property  # validated_property is checked at initialization time, so if this file is missing the format will not match
     def result_file(self) -> Json:
@@ -79,8 +81,8 @@ class DanaosDir(Directory, MedicalImagingData):
         return [Png(self.fspath / f) for f in self.fspath.glob("Col*.png")]
 
     @property
-    def contour_file(self) -> list[Png]:
-        """The colour files in the directory."""
+    def contour_file(self) -> Png:
+        """The contour file in the directory."""
         return Png(self.fspath / "Cont.png")
 
     @property
